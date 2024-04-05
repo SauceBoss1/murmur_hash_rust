@@ -1,14 +1,24 @@
-pub fn add(left: usize, right: usize) -> usize {
-    left + right
+mod tree;
+#[allow(dead_code)]
+#[derive(Clone, Debug)]
+struct Node<T: PartialOrd> {
+    val: T,
+    left_child: Option<Box<Node<T>>>,
+    right_child: Option<Box<Node<T>>>,
+}
+
+#[derive(Clone, Debug)]
+pub struct Tree<T: PartialOrd> {
+    root: Option<Box<Node<T>>>,
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
+mod test {
+    use super::Node;
 
     #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
+    fn new_node() {
+        let node = Node::new(10);
+        println!("{}", node.val);
     }
 }
