@@ -119,6 +119,32 @@ impl<T: PartialOrd + Clone> Tree<T> {
     pub fn clear(&mut self) {
         self.root = None;
     }
+
+    // let's make a min function that uses just references
+    // this allows the function to be cheaper
+    pub fn min(&self) -> Option<&T> {
+        let mut current_node = &self.root;
+        while let Some(node) = current_node {
+            if node.left_child.is_some() {
+                current_node = &node.left_child;
+            } else {
+                return Some(&node.val);
+            }
+        }
+        return None;
+    }
+
+    pub fn max(&self) -> Option<&T> {
+        let mut current_node = &self.root;
+        while let Some(node) = current_node {
+            if node.right_child.is_some() {
+                current_node = &node.right_child
+            } else {
+                return Some(&node.val);
+            }
+        }
+        return None;
+    }
 }
 
 impl<T: PartialOrd + std::fmt::Debug> Tree<T> {

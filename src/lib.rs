@@ -82,8 +82,7 @@ mod test {
             .insert(3);
 
         println!("{t}");
-
-        t.delete(9);
+        t.delete(9).delete(2).delete(3).delete(3);
         println!("{t}");
     }
 }
