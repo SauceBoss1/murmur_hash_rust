@@ -59,6 +59,7 @@ impl<T: PartialOrd + Clone> Tree<T> {
         return self;
     }
 
+    // public search function
     pub fn does_exist(&self, val: T) -> bool {
         self.search(val).is_some()
     }
@@ -76,6 +77,7 @@ impl<T: PartialOrd + Clone> Tree<T> {
         }
     }
 
+    // finding min helper
     fn find_min(node: Box<Node<T>>) -> Box<Node<T>> {
         let mut current_node = node;
         while let Some(n) = current_node.left_child {
@@ -84,8 +86,10 @@ impl<T: PartialOrd + Clone> Tree<T> {
         return current_node;
     }
 
-    pub fn delete(&mut self, val: T) {
-        self.root = Self::delete_recursive(self.root.take(), val)
+    // delete
+    pub fn delete(&mut self, val: T) -> &mut Self {
+        self.root = Self::delete_recursive(self.root.take(), val);
+        self
     }
     fn delete_recursive(node: Option<Box<Node<T>>>, val: T) -> Option<Box<Node<T>>> {
         match node {
@@ -111,12 +115,14 @@ impl<T: PartialOrd + Clone> Tree<T> {
         }
     }
 
+    // deletes tree
     pub fn clear(&mut self) {
         self.root = None;
     }
 }
 
 impl<T: PartialOrd + std::fmt::Debug> Tree<T> {
+    // prints the tree
     fn build_inorder_str(&self, node: &Option<Box<Node<T>>>, buffer: &mut String) {
         if let Some(ref n) = node {
             self.build_inorder_str(&n.left_child, buffer);
