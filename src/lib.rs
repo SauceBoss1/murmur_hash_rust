@@ -69,4 +69,21 @@ mod test {
         assert_eq!(t.does_exist(1), true);
         assert_eq!(t.does_exist(100), false);
     }
+
+    #[test]
+    fn simple_delete() {
+        let mut t: Tree<i32> = Tree::new();
+        t.insert(5)
+            .insert(3)
+            .insert(7)
+            .insert(8)
+            .insert(9)
+            .insert(1)
+            .insert(3);
+
+        println!("{t}");
+
+        t.delete(9);
+        println!("{t}");
+    }
 }

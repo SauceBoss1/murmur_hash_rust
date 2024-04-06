@@ -10,9 +10,21 @@ impl<T: PartialOrd> Node<T> {
             right_child: None,
         })
     }
+
+    pub fn new_mod(
+        val_in: T,
+        left_child: Option<Box<Node<T>>>,
+        right_child: Option<Box<Node<T>>>,
+    ) -> Box<Node<T>> {
+        Box::new(Node {
+            val: val_in,
+            left_child: left_child,
+            right_child: right_child,
+        })
+    }
 }
 
-impl<T: PartialOrd> Tree<T> {
+impl<T: PartialOrd + Clone> Tree<T> {
     // creating a new Tree
     pub fn new() -> Self {
         Tree { root: None }
@@ -62,6 +74,45 @@ impl<T: PartialOrd> Tree<T> {
             Some(ref n) => self.search_recurse(&n.right_child, val),
             _ => None,
         }
+    }
+
+    fn find_min(node: Box<Node<T>>) -> Box<Node<T>> {
+        let mut current_node = node;
+        while let Some(n) = current_node.left_child {
+            current_node = n;
+        }
+        return current_node;
+    }
+
+    pub fn delete(&mut self, val: T) {
+        self.root = Self::delete_recursive(self.root.take(), val)
+    }
+    fn delete_recursive(node: Option<Box<Node<T>>>, val: T) -> Option<Box<Node<T>>> {
+        match node {
+            Some(n) if val < n.val => {
+                let left_child_update = Self::delete_recursive(n.left_child, val);
+                Some(Node::new_mod(n.val, left_child_update, n.right_child))
+            }
+            Some(n) if val > n.val => {
+                let right_child_update = Self::delete_recursive(n.right_child, val);
+                Some(Node::new_mod(n.val, n.left_child, right_child_update))
+            }
+            Some(n) => match (n.left_child, n.right_child) {
+                (None, None) => None,
+                (Some(l), None) => Some(l),
+                (None, Some(r)) => Some(r),
+                (Some(l), Some(r)) => {
+                    let successor_val = Self::find_min(r.clone()).val.clone();
+                    let r_update = Self::delete_recursive(Some(r), successor_val.clone());
+                    Some(Node::new_mod(successor_val, Some(l), r_update))
+                }
+            },
+            None => None,
+        }
+    }
+
+    pub fn clear(&mut self) {
+        self.root = None;
     }
 }
 
