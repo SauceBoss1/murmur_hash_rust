@@ -1,3 +1,5 @@
+use std::{cell::RefCell, rc::Rc};
+
 mod tree;
 #[derive(Clone, Debug)]
 struct Node<T: PartialOrd> {
@@ -11,78 +13,22 @@ pub struct Tree<T: PartialOrd> {
     root: Option<Box<Node<T>>>,
 }
 
-#[cfg(test)]
-mod test {
-    use super::{Node, Tree};
+mod rb_tree;
+enum Color {
+    Red,
+    Black,
+}
 
-    #[test]
-    fn new_node() {
-        let node = Node::new(10);
-        println!("{:?}", node);
-    }
+type Ptr<K: PartialOrd, V> = Rc<RefCell<RbNode<K, V>>>;
+struct RbNode<K: PartialOrd, V> {
+    val: V,
+    key: K,
+    color: Color,
+    parent: Option<Ptr<K, V>>,
+    left_child: Option<Ptr<K, V>>,
+    right_child: Option<Ptr<K, V>>,
+}
 
-    #[test]
-    fn new_tree() {
-        let tree: Tree<i32> = Tree::new();
-        println!("Tree init: {:#?}", tree);
-    }
-
-    #[test]
-    fn insert_tree() {
-        let mut tree = Tree::new();
-        tree.insert(5);
-        tree.insert(3);
-        tree.insert(7);
-        tree.insert(2);
-        tree.insert(4);
-        tree.insert(6);
-        tree.insert(7);
-        tree.insert(8);
-        println!("{tree}");
-        let t2 = tree.clone();
-        println!("{t2}");
-    }
-
-    #[test]
-    fn str_trees() {
-        let mut str_tree: Tree<String> = Tree::new();
-        str_tree
-            .insert("Hello ".to_string())
-            .insert("World!".to_string())
-            .insert("It is my Birthday!".to_string())
-            .insert("I am old now.".to_string());
-
-        println!("{str_tree}");
-    }
-
-    #[test]
-    fn exist_test() {
-        let mut t: Tree<i32> = Tree::new();
-        t.insert(5)
-            .insert(3)
-            .insert(7)
-            .insert(8)
-            .insert(9)
-            .insert(1)
-            .insert(3);
-
-        assert_eq!(t.does_exist(1), true);
-        assert_eq!(t.does_exist(100), false);
-    }
-
-    #[test]
-    fn simple_delete() {
-        let mut t: Tree<i32> = Tree::new();
-        t.insert(5)
-            .insert(3)
-            .insert(7)
-            .insert(8)
-            .insert(9)
-            .insert(1)
-            .insert(3);
-
-        println!("{t}");
-        t.delete(9).delete(2).delete(3).delete(3);
-        println!("{t}");
-    }
+pub struct RbTree<K: PartialOrd, V> {
+    root: Option<Ptr<K, V>>,
 }
