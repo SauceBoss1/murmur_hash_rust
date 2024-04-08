@@ -145,6 +145,22 @@ impl<T: PartialOrd + Clone> Tree<T> {
         }
         return None;
     }
+
+    pub fn height(&self) -> i32 {
+        let current_node = &self.root;
+        fn height_recurse<T: PartialOrd>(node: &Option<Box<Node<T>>>) -> i32 {
+            match node {
+                None => -1,
+                Some(ref n) => {
+                    1 + std::cmp::max(
+                        height_recurse(&n.left_child),
+                        height_recurse(&n.right_child),
+                    )
+                }
+            }
+        }
+        return height_recurse(current_node);
+    }
 }
 
 impl<T: PartialOrd + std::fmt::Debug> Tree<T> {
