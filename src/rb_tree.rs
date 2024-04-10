@@ -139,6 +139,10 @@ impl<K: PartialOrd + Debug, V> RbTree<K, V> {
         x.borrow_mut().parent = Some(y.clone());
     }
 
+    /// This function fixes up the rb-tree for insertions
+    ///
+    /// It looks very disgusting but that is what I get
+    /// for using safe rust
     fn in_fix_up(&mut self, mut z: Ptr<K, V>) {
         while z
             .borrow()
@@ -148,8 +152,6 @@ impl<K: PartialOrd + Debug, V> RbTree<K, V> {
         {
             let zp = z.borrow().parent.as_ref().unwrap().clone(); // parent
             let zpp = zp.borrow().parent.as_ref().unwrap().clone(); // grandparent
-
-            println!("Current Node - Key: {:?}", z.borrow().key); // TODO: FIND THE CULPRIT
 
             // if Rc::ptr_eq(&zp, &zpp.borrow().left_child.as_ref().unwrap()) {
             if zpp
@@ -161,46 +163,41 @@ impl<K: PartialOrd + Debug, V> RbTree<K, V> {
                 //z.parent is the left child
                 let y = zpp.borrow().right_child.clone();
 
-                if let Some(y) = y {
-                    if y.borrow().color == Color::Red {
-                        // case 1
-                        zp.borrow_mut().color = Color::Black;
-                        y.borrow_mut().color = Color::Black;
-                        zpp.borrow_mut().color = Color::Red;
-                        z = zpp.clone();
-                    } else {
-                        // case 2
-                        // if Rc::ptr_eq(&z, &zpp.borrow().right_child.as_ref().unwrap()) {
-                        if zpp
-                            .borrow()
-                            .right_child
-                            .as_ref()
-                            .map_or(false, |right| Rc::ptr_eq(&z, right))
-                        {
-                            z = zp.clone();
-                            self.left_rotate(z.clone());
-                        }
-
-                        // case 3
-                        zp.borrow_mut().color = Color::Black;
-                        zpp.borrow_mut().color = Color::Red;
-                        self.right_rotate(zpp.clone());
+                if let Some(y) = y.as_ref().filter(|y| y.borrow().color == Color::Red) {
+                    // case 1
+                    zp.borrow_mut().color = Color::Black;
+                    y.borrow_mut().color = Color::Black;
+                    zpp.borrow_mut().color = Color::Red;
+                    z = zpp.clone();
+                } else {
+                    // case 2
+                    if zp
+                        .borrow()
+                        .right_child
+                        .as_ref()
+                        .map_or(false, |right| Rc::ptr_eq(&z, right))
+                    {
+                        z = zp.clone();
+                        self.left_rotate(z.clone());
                     }
+
+                    // case 3
+                    zp.borrow_mut().color = Color::Black;
+                    zpp.borrow_mut().color = Color::Red;
+                    self.right_rotate(zpp.clone());
                 }
             } else {
                 let y = zpp.borrow().left_child.clone();
 
-                if let Some(y) = y {
-                    if y.borrow().color == Color::Red {
-                        // case 1
-                        zp.borrow_mut().color = Color::Black;
-                        y.borrow_mut().color = Color::Black;
-                        zpp.borrow_mut().color = Color::Red;
-                        z = zpp.clone();
-                    }
+                if let Some(y) = y.as_ref().filter(|y| y.borrow().color == Color::Red) {
+                    // case 1
+                    zp.borrow_mut().color = Color::Black;
+                    y.borrow_mut().color = Color::Black;
+                    zpp.borrow_mut().color = Color::Red;
+                    z = zpp.clone();
                 } else {
                     // case 2
-                    if zpp
+                    if zp
                         .borrow()
                         .left_child
                         .as_ref()

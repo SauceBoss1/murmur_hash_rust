@@ -12,12 +12,12 @@ mod rb_tree {
         t.insert(5, 6);
         t.insert(6, 7);
         t.insert(10, 10);
-        t.insert(11, 11).insert(12, 12);
+        // t.insert(11, 11).insert(12, 12);
 
-        // for i in 10..14 {
-        //     t.insert(i, i);
-        // }
+        for i in 10..100 {
+            t.insert(i, i * 2);
+        }
         t.print_in_order();
-        println!("{:?}", t);
+        // println!("{:?}", t);
     }
 }

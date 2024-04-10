@@ -1,8 +1,4 @@
-use std::{
-    cell::RefCell,
-    fmt::Debug,
-    rc::{Rc, Weak},
-};
+use std::{cell::RefCell, fmt::Debug, rc::Rc};
 
 mod tree;
 #[derive(Clone, Debug)]
