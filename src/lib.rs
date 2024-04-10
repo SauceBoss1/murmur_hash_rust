@@ -1,4 +1,8 @@
-use std::{cell::RefCell, rc::Rc};
+use std::{
+    cell::RefCell,
+    fmt::Debug,
+    rc::{Rc, Weak},
+};
 
 mod tree;
 #[derive(Clone, Debug)]
@@ -14,12 +18,16 @@ pub struct Tree<T: PartialOrd> {
 }
 
 mod rb_tree;
+
+#[derive(PartialEq, PartialOrd, Clone, Debug)]
 enum Color {
     Red,
     Black,
 }
 
 type Ptr<K, V> = Rc<RefCell<RbNode<K, V>>>;
+
+// #[derive(Debug, Clone)]
 struct RbNode<K: PartialOrd, V> {
     val: V,
     key: K,
@@ -29,6 +37,7 @@ struct RbNode<K: PartialOrd, V> {
     right_child: Option<Ptr<K, V>>,
 }
 
+#[derive(Debug, Clone)]
 pub struct RbTree<K: PartialOrd, V> {
     root: Option<Ptr<K, V>>,
 }
