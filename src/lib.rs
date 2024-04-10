@@ -19,7 +19,7 @@ enum Color {
     Black,
 }
 
-type Ptr<K: PartialOrd, V> = Rc<RefCell<RbNode<K, V>>>;
+type Ptr<K, V> = Rc<RefCell<RbNode<K, V>>>;
 struct RbNode<K: PartialOrd, V> {
     val: V,
     key: K,
