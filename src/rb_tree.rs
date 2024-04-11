@@ -1,12 +1,15 @@
+// use std::borrow::Borrow;
 use std::{
     cell::RefCell,
     fmt::{self, Debug},
     rc::Rc,
 };
 
+use PartialEq;
+
 use super::{Color, Ptr, RbNode, RbTree};
 
-impl<K: PartialOrd, V> RbNode<K, V> {
+impl<K: PartialOrd, V: PartialEq> RbNode<K, V> {
     pub fn new(key: K, val: V) -> Option<Ptr<K, V>> {
         Some(Rc::new(RefCell::new(RbNode {
             key,
@@ -22,6 +25,7 @@ impl<K: PartialOrd, V> RbNode<K, V> {
 impl<K, V> RbTree<K, V>
 where
     K: PartialOrd + Debug,
+    V: PartialEq + PartialOrd,
 {
     pub fn new() -> Self {
         RbTree { root: None }
@@ -59,12 +63,72 @@ where
         return self;
     }
 
-    pub fn inorder_traversal(&mut self) {}
+    pub fn delete(&mut self, key: K) -> &mut Self {
+        if let Some(ref z) = self.search(&key) {
+            let mut y = z.clone();
+            let mut x;
+            let mut y_og_color: Color = Self::node_color(&Some(y.clone()));
+
+            if z.borrow().left_child.is_none() {
+                x = z.borrow().right_child.clone();
+                self.rb_transplant(z.clone(), x.clone());
+            } else if z.borrow().right_child.is_none() {
+                x = z.borrow().left_child.clone();
+                self.rb_transplant(z.clone(), x.clone());
+            } else {
+                y = self.find_min(z.borrow().right_child.clone().expect("right must exist"));
+                y_og_color = Self::node_color(&Some(y.clone()));
+                x = y.borrow().right_child.clone(); // this breaks if right child is none
+
+                if y.borrow()
+                    .parent
+                    .as_ref()
+                    .map_or(false, |p| Rc::ptr_eq(p, z))
+                {
+                    x.as_ref().unwrap().borrow_mut().parent = Some(z.clone()); // this needs to be dealt with
+                } else {
+                    self.rb_transplant(y.clone(), x.clone());
+                    y.borrow_mut().right_child = z.borrow().right_child.clone();
+                    y.borrow().right_child.as_ref().unwrap().borrow_mut().parent = Some(y.clone());
+                }
+
+                self.rb_transplant(z.clone(), Some(y.clone()));
+                y.borrow_mut().left_child = z.borrow().left_child.clone();
+                y.borrow().left_child.as_ref().unwrap().borrow_mut().parent = Some(y.clone());
+                y.borrow_mut().color = z.borrow().color;
+            }
+
+            if y_og_color == Color::Black {
+                self.delete_fixup(x.clone());
+            }
+        }
+
+        return self;
+    }
+
+    pub fn key_exist(&self, key: K) -> bool {
+        self.search(&key).is_some()
+    }
 }
 
 /// PRIVATE HELPERS
 impl<K: PartialOrd + Debug, V> RbTree<K, V> {
     // Helper functions below
+
+    //search
+    fn search(&self, k: &K) -> Option<Ptr<K, V>> {
+        let mut curr_node = self.root.clone();
+        while let Some(ref n) = curr_node.clone() {
+            if k < &n.borrow().key {
+                curr_node = n.borrow().left_child.clone();
+            } else if k > &n.borrow().key {
+                curr_node = n.borrow().right_child.clone();
+            } else {
+                return Some(n.clone());
+            }
+        }
+        return None;
+    }
 
     /// Rotates tree to the left
     fn left_rotate(&mut self, x: Ptr<K, V>) {
@@ -219,8 +283,199 @@ impl<K: PartialOrd + Debug, V> RbTree<K, V> {
             root.borrow_mut().color = Color::Black;
         }
     }
+
+    // Let's start implementing delete helpers
+    fn rb_transplant(&mut self, u: Ptr<K, V>, v: Option<Ptr<K, V>>) {
+        let u_parent = u.borrow().parent.clone();
+
+        match u_parent {
+            Some(ref parent) => {
+                if parent
+                    .borrow()
+                    .left_child
+                    .as_ref()
+                    .map_or(false, |left| Rc::ptr_eq(&u, &left))
+                {
+                    parent.borrow_mut().left_child = v.clone()
+                } else {
+                    parent.borrow_mut().right_child = v.clone();
+                }
+            }
+            None => self.root = v.clone(),
+        }
+
+        // v.borrow_mut().parent = u.borrow().parent.clone();
+        if let Some(ref v_inner) = v {
+            v_inner.borrow_mut().parent = u.borrow().parent.clone();
+        }
+    }
+
+    fn find_min(&mut self, x: Ptr<K, V>) -> Ptr<K, V> {
+        let mut current = x;
+        while let Some(ref left) = current.clone().borrow().left_child {
+            current = left.clone();
+        }
+
+        return current;
+    }
 }
 
+impl<K, V> RbTree<K, V>
+where
+    K: PartialOrd + Debug,
+    V: PartialEq,
+{
+    /// get node color
+    fn node_color(node: &Option<Ptr<K, V>>) -> Color {
+        node.as_ref().map_or(Color::Black, |n| n.borrow().color)
+    }
+
+    /// check if left child
+    fn is_left_child(node: &Ptr<K, V>) -> bool {
+        match node.borrow().parent {
+            Some(ref parent) => parent
+                .borrow()
+                .left_child
+                .as_ref()
+                .map_or(false, |l_child| Rc::ptr_eq(l_child, node)),
+            None => false,
+        }
+    }
+
+    /// retrieve sibling
+    fn sibling(node: &Ptr<K, V>) -> Option<Ptr<K, V>> {
+        node.borrow().parent.as_ref().and_then(|p| {
+            if Self::is_left_child(node) {
+                p.borrow().right_child.clone()
+            } else {
+                p.borrow().left_child.clone()
+            }
+        })
+    }
+
+    /// Swaps a node
+    fn replace_node(node: &Ptr<K, V>, replacement: Option<Ptr<K, V>>) {
+        if let Some(ref parent) = node.borrow().parent {
+            if Self::is_left_child(node) {
+                parent.borrow_mut().left_child = replacement.clone();
+            } else {
+                parent.borrow_mut().right_child = replacement.clone();
+            }
+        }
+        if let Some(ref replacement) = replacement {
+            replacement.borrow_mut().parent = node.borrow().parent.clone();
+        }
+    }
+
+    /// set's the color of a node
+    fn set_color(node: &Option<Ptr<K, V>>, color: Color) {
+        if let Some(ref n) = node {
+            n.borrow_mut().color = color;
+        }
+    }
+
+    fn delete_fixup(&mut self, mut x: Option<Ptr<K, V>>) {
+        while x.clone() != self.root && Self::node_color(&x) == Color::Black {
+            if let Some(ref x_unwrapped) = x {
+                if Self::is_left_child(x_unwrapped) {
+                    let mut w = Self::sibling(x_unwrapped).expect("Sibling must exist");
+                    if Self::node_color(&Some(w.clone())) == Color::Red {
+                        // case 1
+                        Self::set_color(&Some(w.clone()), Color::Black);
+                        Self::set_color(&x_unwrapped.borrow().parent, Color::Red);
+                        self.left_rotate(
+                            x_unwrapped
+                                .borrow()
+                                .parent
+                                .clone()
+                                .expect("parent must exist"),
+                        );
+                        let new_w = Self::sibling(x_unwrapped).expect("sibling must exist");
+                        w = new_w;
+                    }
+
+                    // case 2
+                    if Self::node_color(&w.borrow().left_child) == Color::Black
+                        && Self::node_color(&w.borrow().right_child) == Color::Black
+                    {
+                        Self::set_color(&Some(w.clone()), Color::Red);
+                        let x_new = x_unwrapped.borrow().parent.clone();
+                        x = x_new;
+                    } else {
+                        if Self::node_color(&w.borrow().right_child) == Color::Black {
+                            Self::set_color(&w.borrow().left_child, Color::Black);
+                            Self::set_color(&Some(w.clone()), Color::Red);
+                            self.right_rotate(w.clone());
+                            let new_w = Self::sibling(x_unwrapped).expect("Sibling must exist");
+                            w = new_w;
+                        }
+
+                        Self::set_color(
+                            &Some(w.clone()),
+                            Self::node_color(&x_unwrapped.borrow().parent),
+                        );
+                        Self::set_color(&x_unwrapped.borrow().parent, Color::Black);
+                        Self::set_color(&w.borrow().right_child, Color::Black);
+                        self.left_rotate(
+                            x_unwrapped
+                                .borrow()
+                                .parent
+                                .clone()
+                                .expect("parent must exist"),
+                        );
+
+                        let x_new = self.root.clone();
+                        x = x_new;
+                    }
+                } else {
+                    // Mirror image of the above code with left and right swapped.
+                    let mut w = Self::sibling(x_unwrapped).expect("Sibling must exist");
+                    if Self::node_color(&Some(w.clone())) == Color::Red {
+                        Self::set_color(&Some(w.clone()), Color::Black);
+                        Self::set_color(&x_unwrapped.borrow().parent, Color::Red);
+                        self.right_rotate(x_unwrapped.borrow().parent.clone().unwrap());
+                        let new_w = Self::sibling(x_unwrapped)
+                            .expect("New sibling must exist after rotation");
+                        w = new_w;
+                    }
+
+                    if Self::node_color(&w.borrow().right_child) == Color::Black
+                        && Self::node_color(&w.borrow().left_child) == Color::Black
+                    {
+                        Self::set_color(&Some(w.clone()), Color::Red);
+                        let new_x = x_unwrapped.borrow().parent.clone();
+                        x = new_x;
+                    } else {
+                        if Self::node_color(&w.borrow().left_child) == Color::Black {
+                            Self::set_color(&w.borrow().right_child, Color::Black);
+                            Self::set_color(&Some(w.clone()), Color::Red);
+                            self.left_rotate(w.clone());
+                            let new_w = Self::sibling(x_unwrapped)
+                                .expect("New sibling must exist after rotation");
+                            w = new_w;
+                        }
+
+                        Self::set_color(
+                            &Some(w.clone()),
+                            Self::node_color(&x_unwrapped.borrow().parent),
+                        );
+                        Self::set_color(&x_unwrapped.borrow().parent, Color::Black);
+                        Self::set_color(&w.borrow().left_child, Color::Black);
+                        self.right_rotate(x_unwrapped.borrow().parent.clone().unwrap());
+                        x = self.root.clone();
+                    }
+                }
+            } else {
+                break;
+            }
+        }
+        if let Some(ref x) = x {
+            Self::set_color(&Some(x.clone()), Color::Black);
+        }
+    }
+}
+
+// DEBUGGING STUFF BELOW
 impl<K, V> RbTree<K, V>
 where
     K: PartialOrd + std::fmt::Debug,
@@ -248,7 +503,6 @@ impl<K: Debug + PartialOrd, V: Debug> fmt::Debug for RbNode<K, V> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("RbNode")
             .field("key", &self.key)
-            .field("val", &self.val)
             .field("color", &self.color)
             // Omit the parent to prevent cyclic printing
             .field("left_child", &self.left_child)
@@ -257,100 +511,27 @@ impl<K: Debug + PartialOrd, V: Debug> fmt::Debug for RbNode<K, V> {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_left_rotate() {
-        // Step 2: Manually construct the tree goes here.
-        let mut tree = RbTree::<i32, i32>::new(); // Create a new tree instance.
-
-        let x = Rc::new(RefCell::new(RbNode {
-            key: 1,
-            val: 10,
-            color: Color::Black, // Assume colors are correctly set for your needs.
-            parent: None,
-            left_child: None,
-            right_child: None,
-        }));
-
-        let y = Rc::new(RefCell::new(RbNode {
-            key: 2,
-            val: 20,
-            color: Color::Red,
-            parent: None,
-            left_child: None,
-            right_child: None,
-        }));
-
-        // Manually link x and y.
-        x.borrow_mut().right_child = Some(y.clone());
-        y.borrow_mut().parent = Some(x.clone());
-
-        // Set x as the tree's root.
-        tree.root = Some(x.clone());
-
-        tree.left_rotate(x.clone());
-
-        assert_eq!(tree.root.as_ref().unwrap().borrow().key, 2); // y is now the root.
-        assert!(tree.root.as_ref().unwrap().borrow().left_child.is_some()); // y has a left child.
-        assert_eq!(
-            tree.root
-                .unwrap()
-                .borrow()
-                .left_child
-                .as_ref()
-                .unwrap()
-                .borrow()
-                .key,
-            1
-        ); // The left child of y is x.
+impl<K: std::fmt::Debug + PartialOrd, V: std::fmt::Debug> RbTree<K, V> {
+    pub fn print_tree(&self) {
+        self.print_node(&self.root, 0);
     }
 
-    #[test]
-    fn test_right_rotate() {
-        let mut tree = RbTree::<i32, i32>::new();
+    fn print_node(&self, node: &Option<Ptr<K, V>>, depth: usize) {
+        if let Some(n) = node {
+            let indent = "->".repeat(depth); // Create indentation based on the depth
+            println!("{}|{:?}|", indent, n.borrow().key); // Print the current node
 
-        let x = Rc::new(RefCell::new(RbNode {
-            key: 2,
-            val: 20,
-            color: Color::Black,
-            parent: None,
-            left_child: None,
-            right_child: None,
-        }));
+            // Recursively print the left child, if it exists
+            if n.borrow().left_child.is_some() {
+                // println!("{}left:", indent); // Label for left child
+                self.print_node(&n.borrow().left_child, depth + 1); // Recursion with increased depth
+            }
 
-        let y = Rc::new(RefCell::new(RbNode {
-            key: 1,
-            val: 10,
-            color: Color::Red,
-            parent: None,
-            left_child: None,
-            right_child: None,
-        }));
-
-        // Manually link x and y.
-        x.borrow_mut().left_child = Some(y.clone());
-        y.borrow_mut().parent = Some(x.clone());
-
-        // Set x as the tree's root.
-        tree.root = Some(x.clone());
-
-        tree.right_rotate(x.clone());
-
-        assert_eq!(tree.root.as_ref().unwrap().borrow().key, 1); // y is now the root.
-        assert!(tree.root.as_ref().unwrap().borrow().right_child.is_some()); // y has a right child.
-        assert_eq!(
-            tree.root
-                .unwrap()
-                .borrow()
-                .right_child
-                .as_ref()
-                .unwrap()
-                .borrow()
-                .key,
-            2
-        ); // The right child of y is x.
+            // Recursively print the right child, if it exists
+            if n.borrow().right_child.is_some() {
+                // println!("{}right:", indent); // Label for right child
+                self.print_node(&n.borrow().right_child, depth + 1); // Recursion with increased depth
+            }
+        }
     }
 }

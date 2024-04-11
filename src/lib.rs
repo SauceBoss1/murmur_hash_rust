@@ -15,7 +15,7 @@ pub struct Tree<T: PartialOrd> {
 
 mod rb_tree;
 
-#[derive(PartialEq, PartialOrd, Clone, Debug)]
+#[derive(PartialEq, PartialOrd, Clone, Debug, Copy)]
 enum Color {
     Red,
     Black,
@@ -23,7 +23,7 @@ enum Color {
 
 type Ptr<K, V> = Rc<RefCell<RbNode<K, V>>>;
 
-// #[derive(Debug, Clone)]
+#[derive(Clone, PartialEq)]
 struct RbNode<K: PartialOrd, V> {
     val: V,
     key: K,
