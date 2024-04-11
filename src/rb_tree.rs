@@ -28,7 +28,10 @@ where
     V: PartialEq + PartialOrd,
 {
     pub fn new() -> Self {
-        RbTree { root: None }
+        RbTree {
+            root: None,
+            length: 0,
+        }
     }
 
     pub fn insert(&mut self, key: K, value: V) -> &mut Self {
@@ -60,13 +63,15 @@ where
         }
 
         self.in_fix_up(new_node);
+
+        self.length += 1;
         return self;
     }
 
     pub fn delete(&mut self, key: K) -> &mut Self {
         if let Some(ref z) = self.search(&key) {
             let mut y = z.clone();
-            let mut x;
+            let x;
             let mut y_og_color: Color = Self::node_color(&Some(y.clone()));
 
             if z.borrow().left_child.is_none() {
@@ -76,7 +81,7 @@ where
                 x = z.borrow().left_child.clone();
                 self.rb_transplant(z.clone(), x.clone());
             } else {
-                y = self.find_min(z.borrow().right_child.clone().expect("right must exist"));
+                y = self.find_min(z.borrow().right_child.clone().expect("right must exist")); // this finds right most (which is a leaf)
                 y_og_color = Self::node_color(&Some(y.clone()));
                 x = y.borrow().right_child.clone(); // this breaks if right child is none
 
@@ -85,22 +90,30 @@ where
                     .as_ref()
                     .map_or(false, |p| Rc::ptr_eq(p, z))
                 {
-                    x.as_ref().unwrap().borrow_mut().parent = Some(z.clone()); // this needs to be dealt with
+                    if let Some(ref x) = x.clone() {
+                        x.borrow_mut().parent = Some(z.clone());
+                    }
                 } else {
                     self.rb_transplant(y.clone(), x.clone());
                     y.borrow_mut().right_child = z.borrow().right_child.clone();
-                    y.borrow().right_child.as_ref().unwrap().borrow_mut().parent = Some(y.clone());
+                    if let Some(ref right) = y.borrow().right_child {
+                        right.borrow_mut().parent = Some(y.clone());
+                    }
                 }
 
                 self.rb_transplant(z.clone(), Some(y.clone()));
                 y.borrow_mut().left_child = z.borrow().left_child.clone();
-                y.borrow().left_child.as_ref().unwrap().borrow_mut().parent = Some(y.clone());
+                if let Some(ref left) = y.borrow().left_child {
+                    left.borrow_mut().parent = Some(y.clone());
+                }
                 y.borrow_mut().color = z.borrow().color;
             }
 
             if y_og_color == Color::Black {
                 self.delete_fixup(x.clone());
             }
+
+            self.length -= 1;
         }
 
         return self;
@@ -108,6 +121,26 @@ where
 
     pub fn key_exist(&self, key: K) -> bool {
         self.search(&key).is_some()
+    }
+
+    pub fn clear(&mut self) -> &mut Self {
+        self.root = None;
+        self.length = 0;
+        self
+    }
+
+    pub fn get(&self, key: &K) -> Option<V>
+    where
+        V: Clone,
+    {
+        match self.search(key) {
+            Some(n) => Some(n.borrow().val.clone()),
+            None => None,
+        }
+    }
+
+    pub fn len(&self) -> i32 {
+        self.length
     }
 }
 
@@ -353,7 +386,7 @@ where
         })
     }
 
-    /// Swaps a node
+    #[allow(dead_code)]
     fn replace_node(node: &Ptr<K, V>, replacement: Option<Ptr<K, V>>) {
         if let Some(ref parent) = node.borrow().parent {
             if Self::is_left_child(node) {

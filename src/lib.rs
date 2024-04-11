@@ -36,4 +36,5 @@ struct RbNode<K: PartialOrd, V> {
 #[derive(Debug, Clone)]
 pub struct RbTree<K: PartialOrd, V> {
     root: Option<Ptr<K, V>>,
+    length: i32,
 }

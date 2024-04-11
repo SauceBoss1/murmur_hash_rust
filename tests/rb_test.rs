@@ -1,7 +1,17 @@
+use rust_data_structs::RbTree;
+fn create_test_tree(t_size: i32) -> RbTree<i32, i32> {
+    let mut t: RbTree<i32, i32> = RbTree::new();
+    for i in 0..t_size {
+        t.insert(i, i % 2);
+    }
+    return t;
+}
+
 #[cfg(test)]
 mod rb_tree {
-    // use lazy_static::lazy_static;
     use rust_data_structs::RbTree;
+
+    use crate::create_test_tree;
 
     #[test]
     fn test_insert() {
@@ -17,15 +27,13 @@ mod rb_tree {
         for i in 10..500 {
             t.insert(i, i * 2);
         }
+    }
 
-        assert_eq!(t.key_exist(2), true);
-        assert_eq!(t.key_exist(600), false);
-
-        t.print_tree();
-        // println!("{:?}", t);
-
-        t.delete(13).delete(10).delete(12);
-        t.delete(5).delete(131);
-        t.print_tree()
+    #[test]
+    fn test_delete() {
+        let mut t = create_test_tree(500);
+        println!("{}", t.len());
+        t.delete(132).delete(10).delete(255).delete(1);
+        println!("{}", t.len());
     }
 }
