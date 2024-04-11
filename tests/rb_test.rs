@@ -36,4 +36,29 @@ mod rb_tree {
         t.delete(132).delete(10).delete(255).delete(1);
         println!("{}", t.len());
     }
+
+    #[test]
+    fn test_clear() {
+        let mut t = create_test_tree(1000);
+        assert_eq!(t.len(), 1000);
+        t.clear();
+        assert_eq!(t.len(), 0);
+    }
+
+    #[test]
+    fn test_vec() {
+        let mut vec_tree: Vec<RbTree<i32, String>> = Vec::new();
+
+        for _ in 0..3 {
+            vec_tree.push(RbTree::new());
+        }
+
+        vec_tree[0].insert(10, "hi".to_string());
+        vec_tree[1]
+            .insert(11, "hi".to_string())
+            .insert(13, "world".to_string());
+        vec_tree[2].insert(12, "hi".to_string());
+
+        vec_tree[1].print_tree();
+    }
 }
