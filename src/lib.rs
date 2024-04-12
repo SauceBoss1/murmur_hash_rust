@@ -1,5 +1,6 @@
 use std::{cell::RefCell, fmt::Debug, rc::Rc};
 
+// Below is a standard binary search tree
 mod tree;
 #[derive(Clone, Debug)]
 struct Node<T: PartialOrd> {
@@ -33,8 +34,24 @@ struct RbNode<K: PartialOrd, V> {
     right_child: Option<Ptr<K, V>>,
 }
 
+/// # Red Black Tree
+///
+/// types: K, V
+///
+/// public functions:
+/// - insert
+/// - delete
+/// - clear
+/// - new
+/// - key_exists
+/// - get
+/// - len
 #[derive(Debug, Clone)]
 pub struct RbTree<K: PartialOrd, V> {
     root: Option<Ptr<K, V>>,
     length: i32,
 }
+
+// hash table
+mod murmur;
+pub use murmur::{hash_anything, hash_mumur3};

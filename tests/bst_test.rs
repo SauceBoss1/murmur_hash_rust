@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tree_test {
     use lazy_static::lazy_static;
-    use rust_data_structs::Tree;
+    use murmur_hash_rust::Tree;
 
     lazy_static! {
         static ref GLOBAL_TREE: Tree<i64> = {

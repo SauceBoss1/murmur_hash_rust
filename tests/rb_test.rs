@@ -1,4 +1,4 @@
-use rust_data_structs::RbTree;
+use murmur_hash_rust::RbTree;
 fn create_test_tree(t_size: i32) -> RbTree<i32, i32> {
     let mut t: RbTree<i32, i32> = RbTree::new();
     for i in 0..t_size {
@@ -9,7 +9,7 @@ fn create_test_tree(t_size: i32) -> RbTree<i32, i32> {
 
 #[cfg(test)]
 mod rb_tree {
-    use rust_data_structs::RbTree;
+    use murmur_hash_rust::RbTree;
 
     use crate::create_test_tree;
 
@@ -35,6 +35,7 @@ mod rb_tree {
         println!("{}", t.len());
         t.delete(132).delete(10).delete(255).delete(1);
         println!("{}", t.len());
+        assert_eq!(t.key_exist(132), false);
     }
 
     #[test]
