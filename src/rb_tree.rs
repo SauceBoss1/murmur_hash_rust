@@ -9,7 +9,7 @@ use PartialEq;
 
 use super::{Color, Ptr, RbNode, RbTree};
 
-impl<K: PartialOrd, V: PartialEq> RbNode<K, V> {
+impl<K: PartialOrd, V: PartialEq + Debug> RbNode<K, V> {
     pub fn new(key: K, val: V) -> Option<Ptr<K, V>> {
         Some(Rc::new(RefCell::new(RbNode {
             key,
@@ -25,7 +25,7 @@ impl<K: PartialOrd, V: PartialEq> RbNode<K, V> {
 impl<K, V> RbTree<K, V>
 where
     K: PartialOrd + Debug,
-    V: PartialEq + PartialOrd,
+    V: PartialEq + PartialOrd + Debug,
 {
     pub fn new() -> Self {
         RbTree {
@@ -110,6 +110,12 @@ where
             }
 
             if y_og_color == Color::Black {
+                // println!(
+                //     "Before delete_fixup:\n x = {:?},\n\nroot = {:?},\n\n x color = {:?}",
+                //     x,
+                //     self.root,
+                //     Self::node_color(&x)
+                // );
                 self.delete_fixup(x.clone());
             }
 
@@ -145,7 +151,7 @@ where
 }
 
 /// PRIVATE HELPERS
-impl<K: PartialOrd + Debug, V> RbTree<K, V> {
+impl<K: PartialOrd + Debug, V: Debug> RbTree<K, V> {
     // Helper functions below
 
     //search
@@ -356,7 +362,7 @@ impl<K: PartialOrd + Debug, V> RbTree<K, V> {
 impl<K, V> RbTree<K, V>
 where
     K: PartialOrd + Debug,
-    V: PartialEq,
+    V: PartialEq + Debug,
 {
     /// get node color
     fn node_color(node: &Option<Ptr<K, V>>) -> Color {
@@ -408,7 +414,11 @@ where
     }
 
     fn delete_fixup(&mut self, mut x: Option<Ptr<K, V>>) {
-        while x.clone() != self.root && Self::node_color(&x) == Color::Black {
+        // check if pointers have the same location
+        while !x.as_ref().map_or(false, |x_ref| {
+            Rc::ptr_eq(x_ref, &self.root.clone().unwrap())
+        }) && Self::node_color(&x) == Color::Black
+        {
             if let Some(ref x_unwrapped) = x {
                 if Self::is_left_child(x_unwrapped) {
                     let mut w = Self::sibling(x_unwrapped).expect("Sibling must exist");

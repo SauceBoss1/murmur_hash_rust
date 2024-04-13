@@ -62,4 +62,14 @@ mod rb_tree {
 
         vec_tree[1].print_tree();
     }
+
+    #[test]
+    fn test_delete_all() {
+        let size = 1000;
+        let mut t = create_test_tree(size);
+        for i in 0..size {
+            t.delete(i);
+        }
+        println!("{}", t.len());
+    }
 }

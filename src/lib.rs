@@ -25,7 +25,7 @@ enum Color {
 type Ptr<K, V> = Rc<RefCell<RbNode<K, V>>>;
 
 #[derive(Clone, PartialEq)]
-struct RbNode<K: PartialOrd, V> {
+struct RbNode<K: PartialOrd, V: Debug> {
     val: V,
     key: K,
     color: Color,
@@ -47,7 +47,7 @@ struct RbNode<K: PartialOrd, V> {
 /// - get
 /// - len
 #[derive(Debug, Clone)]
-pub struct RbTree<K: PartialOrd, V> {
+pub struct RbTree<K: PartialOrd, V: Debug> {
     root: Option<Ptr<K, V>>,
     length: i32,
 }
@@ -55,3 +55,17 @@ pub struct RbTree<K: PartialOrd, V> {
 // hash table
 mod murmur;
 pub use murmur::{hash_anything, hash_mumur3};
+use serde::Serialize;
+
+mod hash_dict;
+
+#[derive(Debug, Clone)]
+pub struct HashDict<K, V>
+where
+    K: PartialOrd + Serialize,
+    V: Debug,
+{
+    arr_length: usize,
+    seed: u32,
+    table: Vec<RbTree<K, V>>,
+}
