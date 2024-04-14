@@ -72,4 +72,13 @@ mod rb_tree {
         }
         println!("{}", t.len());
     }
+
+    #[test]
+    fn test_asci_tree() {
+        let mut t = create_test_tree(15);
+        t.print_ascii_tree();
+
+        t.delete(3);
+        t.print_ascii_tree();
+    }
 }

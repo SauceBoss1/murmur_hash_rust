@@ -86,13 +86,28 @@ mod hash_dict_test {
 
     #[test]
     fn test_macro() {
-        let table = hash_dict![
+        let table = hash_dict![10, 42,
             "hi".to_string() => 10,
             "there".to_string() => 11,
         ];
 
         if let Some(v) = table.get(&"hi".to_string()) {
             println!("{v}");
+        }
+    }
+
+    #[test]
+    fn test_hash_dict_macro() {
+        let tablt = hash_dict![200, 3,
+            "3" => "hi",
+            "2" => "halo",
+            "1" => "hola"
+        ];
+
+        if let Some(v) = tablt.get(&"3") {
+            assert_eq!(v, "hi");
+        } else {
+            panic!("None was returned");
         }
     }
 }

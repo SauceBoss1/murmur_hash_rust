@@ -64,13 +64,13 @@ where
 #[macro_export]
 macro_rules! hash_dict {
     // This branch initializes an empty HashDict and returns it.
-    () => {{
-        HashDict::new(10, 42)
+    ($length:expr, $seed:expr) => {{
+        HashDict::new($length, $seed)
     }};
 
     // This branch initializes a HashDict and inserts given key-value pairs, then returns it.
-    ($( $key:expr => $value:expr ),* $(,)?) => {{
-        let mut table = HashDict::new(10, 42);
+    ($length:expr, $seed:expr, $( $key:expr => $value:expr ),* $(,)?) => {{
+        let mut table = HashDict::new($length, $seed);
         $(
             table.insert($key, $value);
         )*

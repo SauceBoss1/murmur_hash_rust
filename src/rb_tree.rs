@@ -578,3 +578,41 @@ impl<K: std::fmt::Debug + PartialOrd, V: std::fmt::Debug> RbTree<K, V> {
         }
     }
 }
+
+impl<K, V> RbTree<K, V>
+where
+    K: PartialOrd + Debug,
+    V: Debug,
+{
+    pub fn print_ascii_tree(&self) {
+        Self::print_ascii(&self.root, 0, 0, false);
+    }
+    fn print_ascii(node: &Option<Ptr<K, V>>, space: usize, depth: usize, is_left: bool) {
+        if let Some(node) = node.clone() {
+            let borrowed_node = node.borrow();
+            let color = match borrowed_node.color {
+                Color::Black => "B",
+                Color::Red => "R",
+            };
+            let offset = 5;
+
+            Self::print_ascii(&borrowed_node.left_child, space + offset, depth + 1, true);
+
+            let indent = " ".repeat(space);
+            if depth != 0 {
+                // not root node
+                println!(
+                    "{}{}{:?}({})",
+                    indent,
+                    if is_left { "┌──" } else { "└──" },
+                    borrowed_node.key,
+                    color
+                );
+            } else {
+                println!("{}{:?}({})", indent, borrowed_node.key, color);
+            }
+
+            Self::print_ascii(&borrowed_node.right_child, space + offset, depth + 1, false);
+        }
+    }
+}
