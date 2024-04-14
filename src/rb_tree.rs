@@ -7,6 +7,8 @@ use std::{
 
 use PartialEq;
 
+use crate::RbIter;
+
 use super::{Color, Ptr, RbNode, RbTree};
 
 impl<K: PartialOrd, V: PartialEq + Debug> RbNode<K, V> {
@@ -614,5 +616,48 @@ where
 
             Self::print_ascii(&borrowed_node.right_child, space + offset, depth + 1, false);
         }
+    }
+}
+
+// developing iterators
+
+impl<K, V> Iterator for RbIter<K, V>
+where
+    K: Debug + Clone,
+    V: Debug + Clone,
+{
+    type Item = (K, V);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        return self.iter.next();
+    }
+}
+
+impl<K, V> RbTree<K, V>
+where
+    K: PartialEq + PartialOrd + Debug + Clone,
+    V: PartialEq + Debug + Clone,
+{
+    fn inorder_stack_recurse(&self, node: &Option<Ptr<K, V>>, vec_in: &mut Vec<(K, V)>) {
+        if let Some(ref n) = node.clone() {
+            self.inorder_stack_recurse(&n.borrow().left_child, vec_in);
+
+            vec_in.push((n.borrow().key.clone(), n.borrow().val.clone()));
+
+            self.inorder_stack_recurse(&n.borrow().right_child, vec_in);
+        }
+    }
+
+    fn inorder_items(&self) -> Vec<(K, V)> {
+        let mut stack: Vec<(K, V)> = Vec::new();
+        self.inorder_stack_recurse(&self.root, &mut stack);
+        return stack;
+    }
+
+    pub fn iter(&self) -> RbIter<K, V> {
+        let stack = self.inorder_items();
+        return RbIter {
+            iter: stack.into_iter(),
+        };
     }
 }

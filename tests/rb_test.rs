@@ -81,4 +81,25 @@ mod rb_tree {
         t.delete(3);
         t.print_ascii_tree();
     }
+
+    // #[test]
+    // fn test_inorder_items() {
+    //     let t = create_test_tree(100);
+    //     let stack = t.inorder_items();
+
+    //     t.print_ascii_tree();
+
+    //     for (key, val) in stack.iter() {
+    //         println!("{key} => {val}");
+    //     }
+    // }
+
+    #[test]
+    fn test_iter() {
+        let t = create_test_tree(100);
+
+        for (k, v) in t.iter() {
+            println!("{k} =? {v}");
+        }
+    }
 }

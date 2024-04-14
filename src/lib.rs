@@ -1,4 +1,4 @@
-use std::{cell::RefCell, fmt::Debug, rc::Rc};
+use std::{cell::RefCell, fmt::Debug, rc::Rc, vec};
 
 // Below is a standard binary search tree
 mod tree;
@@ -32,6 +32,14 @@ struct RbNode<K: PartialOrd, V: Debug> {
     parent: Option<Ptr<K, V>>,
     left_child: Option<Ptr<K, V>>,
     right_child: Option<Ptr<K, V>>,
+}
+
+pub struct RbIter<K, V>
+where
+    K: Debug + Clone,
+    V: Debug + Clone,
+{
+    iter: vec::IntoIter<(K, V)>,
 }
 
 /// # Red Black Tree
