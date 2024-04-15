@@ -137,6 +137,7 @@ where
         self
     }
 
+    /// This gets you an immutable value
     pub fn get(&self, key: &K) -> Option<V>
     where
         V: Clone,
@@ -144,6 +145,20 @@ where
         match self.search(key) {
             Some(n) => Some(n.borrow().val.clone()),
             None => None,
+        }
+    }
+
+    /// This is a function callbacl that allows you
+    /// to mutable modify Value V
+    pub fn get_mut<F>(&mut self, key: &K, mut f: F)
+    where
+        F: FnMut(&mut V),
+    {
+        match self.search(key) {
+            Some(n) => {
+                f(&mut n.borrow_mut().val);
+            }
+            None => (),
         }
     }
 

@@ -128,4 +128,17 @@ mod hash_dict_test {
             println!("{k} => {v}");
         }
     }
+
+    #[test]
+    fn test_mut_get() {
+        let mut dict = create_test_dict_i32(1000);
+        let key = 100;
+        println!("{}", dict.get(&key).unwrap());
+
+        dict.get_mut(&key, |v| {
+            *v = 0;
+        });
+
+        println!("{}", dict.get(&key).unwrap());
+    }
 }

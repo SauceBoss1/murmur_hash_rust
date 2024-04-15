@@ -102,4 +102,17 @@ mod rb_tree {
             println!("{k} =? {v}");
         }
     }
+
+    #[test]
+    fn test_get_mut() {
+        let mut t = create_test_tree(5);
+        let key = 3;
+        println!("{}", t.get(&key).unwrap());
+
+        t.get_mut(&key, |value| {
+            *value *= 100;
+        });
+
+        println!("{}", t.get(&key).unwrap());
+    }
 }

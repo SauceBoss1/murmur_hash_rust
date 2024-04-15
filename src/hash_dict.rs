@@ -69,6 +69,16 @@ where
     pub fn len(&self) -> usize {
         self.tab_length
     }
+
+    pub fn get_mut<F>(&mut self, key: &K, f: F)
+    where
+        F: FnMut(&mut V),
+    {
+        if let Ok(hash) = hash_anything(key, self.seed) {
+            let index = (hash % (self.arr_length as u128)) as usize;
+            self.table[index].get_mut(key, f);
+        }
+    }
 }
 
 // developing iters
