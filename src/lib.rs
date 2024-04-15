@@ -19,6 +19,7 @@ pub struct Tree<T: PartialOrd> {
     root: Option<Box<Node<T>>>,
 }
 
+// -------------------- RB TREE --------------------
 mod rb_tree;
 
 #[derive(PartialEq, PartialOrd, Clone, Debug, Copy)]
@@ -65,9 +66,9 @@ pub struct RbTree<K: PartialOrd, V: Debug> {
     length: i32,
 }
 
-// hash table
+// -------------------- HASH TABLE --------------------
 mod murmur;
-pub use murmur::{hash_anything, hash_mumur3};
+use murmur::hash_anything;
 use serde::Serialize;
 
 mod hash_dict;
