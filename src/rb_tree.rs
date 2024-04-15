@@ -271,6 +271,12 @@ impl<K: PartialOrd + Debug, V: Debug> RbTree<K, V> {
             .map_or(false, |p| p.borrow().color == Color::Red)
         {
             let zp = z.borrow().parent.as_ref().unwrap().clone(); // parent
+            if zp.borrow().parent.is_none() {
+                // if the node z is the child of the root node, because the root
+                // node does not have a parent, and thus the "grandparent" would not exist
+                break;
+            }
+
             let zpp = zp.borrow().parent.as_ref().unwrap().clone(); // grandparent
 
             // if Rc::ptr_eq(&zp, &zpp.borrow().left_child.as_ref().unwrap()) {
