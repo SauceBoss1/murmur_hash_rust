@@ -2,6 +2,8 @@ use std::fmt::Debug;
 
 use serde::Serialize;
 
+use crate::HashDictIter;
+
 use super::{hash_anything, HashDict, RbTree};
 
 impl<K, V> HashDict<K, V>
@@ -17,6 +19,7 @@ where
         HashDict {
             arr_length: len,
             seed,
+            tab_length: 0,
             table: new_table,
         }
     }
@@ -27,6 +30,7 @@ where
             let resize_index: usize = (index % (self.arr_length as u128)) as usize;
 
             self.table[resize_index].insert(key, value);
+            self.tab_length += 1;
         }
 
         return self;
@@ -46,7 +50,10 @@ where
         if let Ok(hash) = hash_anything(&key, self.seed) {
             let index: usize = (hash % (self.arr_length as u128)) as usize;
 
-            self.table[index].delete(key.clone());
+            if self.table[index].key_exist(key.clone()) {
+                self.table[index].delete(key.clone());
+                self.tab_length -= 1;
+            }
         }
         return self;
     }
@@ -57,6 +64,47 @@ where
             return Some(val);
         }
         None
+    }
+
+    pub fn len(&self) -> usize {
+        self.tab_length
+    }
+}
+
+// developing iters
+impl<K, V> HashDict<K, V>
+where
+    K: PartialOrd + PartialEq + Debug + Clone + Serialize,
+    V: PartialEq + PartialOrd + Debug + Clone,
+{
+    fn stack_items(&self) -> Vec<(K, V)> {
+        let mut stack: Vec<(K, V)> = Vec::new();
+        for tree in self.table.iter() {
+            if tree.len() > 0 {
+                stack.extend(tree.iter());
+            }
+        }
+        return stack;
+    }
+
+    pub fn iter(&self) -> HashDictIter<K, V> {
+        let mut stack = self.stack_items();
+        stack.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Equal));
+        return HashDictIter {
+            iter: stack.into_iter(),
+        };
+    }
+}
+
+impl<K, V> Iterator for HashDictIter<K, V>
+where
+    K: Debug + Clone,
+    V: Debug + Clone,
+{
+    type Item = (K, V);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        return self.iter.next();
     }
 }
 

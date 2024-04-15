@@ -110,4 +110,22 @@ mod hash_dict_test {
             panic!("None was returned");
         }
     }
+
+    #[test]
+    fn test_iter() {
+        let table = create_test_dict_i32(500);
+        println!("{}", table.len());
+
+        let counter = table.iter().count();
+
+        assert_eq!(table.len(), counter)
+    }
+
+    #[test]
+    fn test_iter_sort() {
+        let t = create_test_dict_i32(100);
+        for (k, v) in t.iter() {
+            println!("{k} => {v}");
+        }
+    }
 }

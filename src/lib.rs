@@ -1,4 +1,9 @@
-use std::{cell::RefCell, fmt::Debug, rc::Rc, vec};
+use std::{
+    cell::RefCell,
+    fmt::Debug,
+    rc::Rc,
+    vec::{self},
+};
 
 // Below is a standard binary search tree
 mod tree;
@@ -67,6 +72,14 @@ use serde::Serialize;
 
 mod hash_dict;
 
+pub struct HashDictIter<K, V>
+where
+    K: Debug + Clone,
+    V: Debug + Clone,
+{
+    iter: vec::IntoIter<(K, V)>,
+}
+
 #[derive(Debug, Clone)]
 pub struct HashDict<K, V>
 where
@@ -75,5 +88,6 @@ where
 {
     arr_length: usize,
     seed: u32,
+    tab_length: usize,
     table: Vec<RbTree<K, V>>,
 }
