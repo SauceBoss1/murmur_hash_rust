@@ -1,6 +1,6 @@
 use murmur_hash_rust::HashDict;
 fn create_test_dict_i32(size: i32) -> HashDict<i32, i32> {
-    let mut d: HashDict<i32, i32> = HashDict::new(10, 69);
+    let mut d: HashDict<i32, i32> = HashDict::new(1000000, 69);
     for i in 0..size {
         d.insert(i, i.pow(2));
     }
